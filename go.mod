@@ -1,4 +1,4 @@
-module atilm/mugit
+module atilm/mgit
 
 go 1.19
 
