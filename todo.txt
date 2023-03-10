@@ -1,7 +1,10 @@
-
 [x] extract branch name
-[ ] show if there are new commits on remote
+[ ] execute test-setup per test
+[x] show if there are new commits on remote
+    "Your branch is behind 'origin/main' by 1 commit"
 [ ] show if there are local changes
 [ ] show if there are local unpushed commits
+    "Your branch is ahead of 'origin/main' by 1 commit."
 [ ] Check if git is installed
 [ ] Handle local git repositories 
+[ ] Handle cloned bare repository
