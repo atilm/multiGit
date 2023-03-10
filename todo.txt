@@ -1,0 +1,7 @@
+
+[x] extract branch name
+[ ] show if there are new commits on remote
+[ ] show if there are local changes
+[ ] show if there are local unpushed commits
+[ ] Check if git is installed
+[ ] Handle local git repositories 
