@@ -19,6 +19,7 @@ var (
 type gitStatus struct {
 	dirName       string
 	branchName    string
+	localChanges  bool
 	commitsToPull int
 	commitsToPush int
 }
@@ -42,7 +43,8 @@ func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
 	} else {
 		branchName := extractBranchName(outputString)
 		commitsToPull, commitsToPush := extractChanges(outputString)
-		return gitStatus{directory, branchName, commitsToPull, commitsToPush}, nil
+		localChanges := strings.Contains(outputString, "Untracked files:")
+		return gitStatus{directory, branchName, localChanges, commitsToPull, commitsToPush}, nil
 	}
 }
 
@@ -50,7 +52,7 @@ func extractBranchName(gitStatusOutput string) string {
 	branchRegex := regexp.MustCompile("(?m)On branch (.+)$")
 	branchNames := branchRegex.FindStringSubmatch(gitStatusOutput)
 
-	var branchName string = "unknwon"
+	var branchName string = "unknown"
 	if len(branchNames) >= 2 {
 		branchName = branchNames[1]
 	}
@@ -87,11 +89,18 @@ func ReportStatus(baseDirectory string) (string, error) {
 			gitStatus, err := queryGitStatus(baseDirectory, entry.Name())
 			if err == nil {
 				repoIndex++
+
+				var localChangesIndicator string = ""
+				if gitStatus.localChanges {
+					localChangesIndicator = "* "
+				}
+
 				if gitStatus.commitsToPull == 0 && gitStatus.commitsToPush == 0 {
-					buffer.WriteString(fmt.Sprintf("%02d: %s (%s) [ok]\n", repoIndex, gitStatus.dirName, gitStatus.branchName))
+					buffer.WriteString(fmt.Sprintf("%02d: %s (%s) %s[ok]\n", repoIndex, gitStatus.dirName, gitStatus.branchName, localChangesIndicator))
 				} else {
 					buffer.WriteString(fmt.Sprintf("%02d: %s (%s) [%d to pull, %d to push]\n", repoIndex, gitStatus.dirName, gitStatus.branchName,
-						gitStatus.commitsToPull, gitStatus.commitsToPush))
+						gitStatus.commitsToPull,
+						gitStatus.commitsToPush))
 				}
 			}
 		}
