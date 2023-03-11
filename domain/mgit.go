@@ -14,6 +14,7 @@ import (
 
 var (
 	ErrNotARepository = errors.New("Not a git repository")
+	ErrNotFound       = errors.New("Not found")
 )
 
 type gitStatus struct {
@@ -22,6 +23,27 @@ type gitStatus struct {
 	localChanges  bool
 	commitsToPull int
 	commitsToPush int
+}
+
+func (s *gitStatus) String() string {
+	var localChangesIndicator string = ""
+
+	if s.localChanges {
+		localChangesIndicator = "* "
+	}
+
+	if s.commitsToPull == 0 && s.commitsToPush == 0 {
+		return fmt.Sprintf("%s (%s) %s[ok]",
+			s.dirName,
+			s.branchName,
+			localChangesIndicator)
+	} else {
+		return fmt.Sprintf("%s (%s) [%d to pull, %d to push]",
+			s.dirName,
+			s.branchName,
+			s.commitsToPull,
+			s.commitsToPush)
+	}
 }
 
 func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
@@ -49,22 +71,20 @@ func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
 }
 
 func extractBranchName(gitStatusOutput string) string {
-	branchRegex := regexp.MustCompile("(?m)On branch (.+)$")
-	branchNames := branchRegex.FindStringSubmatch(gitStatusOutput)
+	branchName, err := extractString(gitStatusOutput, "(?m)On branch (.+)$")
 
-	var branchName string = "unknown"
-	if len(branchNames) >= 2 {
-		branchName = branchNames[1]
+	if err == nil {
+		return branchName
 	}
-	return branchName
+
+	return "unknown"
 }
 
 func extractChanges(gitStatusOutput string) (int, int) {
-	behindRegex := regexp.MustCompile(`Your branch is behind .+ by (\d+) commit`)
-	numbers := behindRegex.FindStringSubmatch(gitStatusOutput)
+	numberString, err := extractString(gitStatusOutput, `Your branch is behind .+ by (\d+) commit`)
 
-	if len(numbers) >= 2 {
-		commitsToPull, err := strconv.Atoi(numbers[1])
+	if err == nil {
+		commitsToPull, err := strconv.Atoi(numberString)
 		if err != nil {
 			return 0, 0
 		} else {
@@ -72,6 +92,17 @@ func extractChanges(gitStatusOutput string) (int, int) {
 		}
 	} else {
 		return 0, 0
+	}
+}
+
+func extractString(input string, regexPattern string) (string, error) {
+	regex := regexp.MustCompile(regexPattern)
+	matches := regex.FindStringSubmatch(input)
+
+	if len(matches) >= 2 {
+		return matches[1], nil
+	} else {
+		return "", ErrNotFound
 	}
 }
 
@@ -89,19 +120,7 @@ func ReportStatus(baseDirectory string) (string, error) {
 			gitStatus, err := queryGitStatus(baseDirectory, entry.Name())
 			if err == nil {
 				repoIndex++
-
-				var localChangesIndicator string = ""
-				if gitStatus.localChanges {
-					localChangesIndicator = "* "
-				}
-
-				if gitStatus.commitsToPull == 0 && gitStatus.commitsToPush == 0 {
-					buffer.WriteString(fmt.Sprintf("%02d: %s (%s) %s[ok]\n", repoIndex, gitStatus.dirName, gitStatus.branchName, localChangesIndicator))
-				} else {
-					buffer.WriteString(fmt.Sprintf("%02d: %s (%s) [%d to pull, %d to push]\n", repoIndex, gitStatus.dirName, gitStatus.branchName,
-						gitStatus.commitsToPull,
-						gitStatus.commitsToPush))
-				}
+				buffer.WriteString(fmt.Sprintf("%02d: %v\n", repoIndex, gitStatus.String()))
 			}
 		}
 	}

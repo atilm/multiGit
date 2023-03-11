@@ -3,12 +3,12 @@
 [x] remove TestMain
 [x] show if there are new commits on remote
     "Your branch is behind 'origin/main' by 1 commit"
+[x] let struct gitStatus create its own string representation
 [ ] show if there are local changes
     [x] "Untracked files:"
     [ ] "Changes to be committed:"
     [ ] "Changes not staged for commit:"
     [ ] in combination with push / pull indicators
-[ ] let struct gitStatus create its own string representation
 [ ] show if there are local unpushed commits
     "Your branch is ahead of 'origin/main' by 1 commit."
 [ ] Check if git is installed
