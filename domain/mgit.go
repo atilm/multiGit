@@ -65,9 +65,14 @@ func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
 	} else {
 		branchName := extractBranchName(outputString)
 		commitsToPull, commitsToPush := extractChanges(outputString)
-		localChanges := strings.Contains(outputString, "Untracked files:")
+		localChanges := hasLocalChanges(outputString)
 		return gitStatus{directory, branchName, localChanges, commitsToPull, commitsToPush}, nil
 	}
+}
+
+func hasLocalChanges(gitStatusOutput string) bool {
+	return strings.Contains(gitStatusOutput, "Untracked files:") ||
+		strings.Contains(gitStatusOutput, "Changes not staged for commit:")
 }
 
 func extractBranchName(gitStatusOutput string) string {

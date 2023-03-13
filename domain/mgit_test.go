@@ -43,7 +43,7 @@ func createFile(filePath string) error {
 	return err
 }
 
-func givenAnEnvironmentWithTwoClientsAndTworRemotes(t *testing.T) func(t *testing.T) {
+func givenAnEnvironmentWithTwoClientsAndTwoRemotes(t *testing.T) func(t *testing.T) {
 	var err error
 	testdataDirectory, err = ioutil.TempDir("", "mgit")
 	if err != nil {
@@ -95,6 +95,16 @@ func whenAFileIsAddedTo(directory string, fileName string) {
 	createFile(filePath)
 }
 
+func whenAFileIsEdited(filePath string, textToAppend string) error {
+	txtFile, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE, 0700)
+	if err != nil {
+		return err
+	}
+
+	txtFile.WriteString("A new line\n")
+	return txtFile.Close()
+}
+
 func thenThereIsNoError(err error, t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error. Got: %v", err)
@@ -108,7 +118,7 @@ func thenTheOutputIs(expected string, actual string, t *testing.T) {
 }
 
 func TestStatusListsAllDirectoriesInGivenBaseDirectory(t *testing.T) {
-	teardown := givenAnEnvironmentWithTwoClientsAndTworRemotes(t)
+	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
 	defer teardown(t)
 
 	// when someone else pushes something to remote2
@@ -124,7 +134,7 @@ func TestStatusListsAllDirectoriesInGivenBaseDirectory(t *testing.T) {
 }
 
 func TestStatusReportsUntrackedFiles(t *testing.T) {
-	teardown := givenAnEnvironmentWithTwoClientsAndTworRemotes(t)
+	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
 	defer teardown(t)
 
 	whenAFileIsAddedTo(testPath("client1/remote1"), "newFile.txt")
@@ -134,6 +144,21 @@ func TestStatusReportsUntrackedFiles(t *testing.T) {
 
 	expectedOutput := `01: remote1 (main) * [ok]
 02: remote2 (main) [ok]
+`
+	thenTheOutputIs(expectedOutput, outString, t)
+}
+
+func TestStatusReportsUnstagedChanges(t *testing.T) {
+	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
+	defer teardown(t)
+
+	whenAFileIsEdited(testPath("client1/remote2/file1.txt"), "text to append")
+	outString, err := whenTheStatusCommandIsExecuted(testPath("client1"))
+
+	thenThereIsNoError(err, t)
+
+	expectedOutput := `01: remote1 (main) [ok]
+02: remote2 (main) * [ok]
 `
 	thenTheOutputIs(expectedOutput, outString, t)
 }

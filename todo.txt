@@ -7,7 +7,7 @@
 [ ] show if there are local changes
     [x] "Untracked files:"
     [ ] "Changes to be committed:"
-    [ ] "Changes not staged for commit:"
+    [x] "Changes not staged for commit:"
     [ ] in combination with push / pull indicators
 [ ] show if there are local unpushed commits
     "Your branch is ahead of 'origin/main' by 1 commit."
