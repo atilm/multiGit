@@ -101,8 +101,16 @@ func whenAFileIsEdited(filePath string, textToAppend string) error {
 		return err
 	}
 
-	txtFile.WriteString("A new line\n")
+	txtFile.WriteString(textToAppend)
 	return txtFile.Close()
+}
+
+func whenAllChangesAreStaged(directory string) {
+	runCommandInDir(exec.Command("git", "add", "."), directory)
+}
+
+func whenAllChangesAreCommitted(directory string) {
+	runCommandInDir(exec.Command("git", "commit", "-m", "\"message\""), directory)
 }
 
 func thenThereIsNoError(err error, t *testing.T) {
@@ -117,7 +125,7 @@ func thenTheOutputIs(expected string, actual string, t *testing.T) {
 	}
 }
 
-func TestStatusListsAllDirectoriesInGivenBaseDirectory(t *testing.T) {
+func TestStatusListsCommitsToPull(t *testing.T) {
 	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
 	defer teardown(t)
 
@@ -129,6 +137,23 @@ func TestStatusListsAllDirectoriesInGivenBaseDirectory(t *testing.T) {
 
 	expectedResult := `01: remote1 (main) [ok]
 02: remote2 (main) [1 to pull, 0 to push]
+`
+	thenTheOutputIs(expectedResult, outString, t)
+}
+
+func TestStatusListsCommitsToPush(t *testing.T) {
+	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
+	defer teardown(t)
+
+	whenAFileIsEdited(testPath("client1/remote2/file1.txt"), "a new line\n")
+	whenAllChangesAreStaged(testPath("client1/remote2"))
+	whenAllChangesAreCommitted(testPath("client1/remote2"))
+	outString, err := whenTheStatusCommandIsExecuted(testPath("client1"))
+
+	thenThereIsNoError(err, t)
+
+	expectedResult := `01: remote1 (main) [ok]
+02: remote2 (main) [0 to pull, 1 to push]
 `
 	thenTheOutputIs(expectedResult, outString, t)
 }
@@ -161,4 +186,45 @@ func TestStatusReportsUnstagedChanges(t *testing.T) {
 02: remote2 (main) * [ok]
 `
 	thenTheOutputIs(expectedOutput, outString, t)
+}
+
+func TestStatusReportsUncommmittedStagedChanges(t *testing.T) {
+	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
+	defer teardown(t)
+
+	whenAFileIsEdited(testPath("client1/remote2/file1.txt"), "text to append")
+	whenAllChangesAreStaged(testPath("client1/remote2/"))
+	outString, err := whenTheStatusCommandIsExecuted(testPath("client1"))
+
+	thenThereIsNoError(err, t)
+
+	expectedOutput := `01: remote1 (main) [ok]
+02: remote2 (main) * [ok]
+`
+	thenTheOutputIs(expectedOutput, outString, t)
+}
+
+func TestStatusListsCommitsToPushAndPullWithLocalchanges(t *testing.T) {
+	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
+	defer teardown(t)
+
+	// when someone else pushes something to remote2
+	addFileCommitAndPush(testPath("client2/remote2"), "file2.txt")
+
+	// when there are unpushed commits
+	whenAFileIsEdited(testPath("client1/remote2/file1.txt"), "a new line\n")
+	whenAllChangesAreStaged(testPath("client1/remote2"))
+	whenAllChangesAreCommitted(testPath("client1/remote2"))
+
+	// when there are uncommitted changes
+	whenAFileIsAddedTo(testPath("client1/remote2"), "aNewFile.txt")
+
+	outString, err := whenTheStatusCommandIsExecuted(testPath("client1"))
+
+	thenThereIsNoError(err, t)
+
+	expectedResult := `01: remote1 (main) [ok]
+02: remote2 (main) * [1 to pull, 1 to push]
+`
+	thenTheOutputIs(expectedResult, outString, t)
 }

@@ -38,12 +38,35 @@ func (s *gitStatus) String() string {
 			s.branchName,
 			localChangesIndicator)
 	} else {
-		return fmt.Sprintf("%s (%s) [%d to pull, %d to push]",
+		return fmt.Sprintf("%s (%s) %s[%d to pull, %d to push]",
 			s.dirName,
 			s.branchName,
+			localChangesIndicator,
 			s.commitsToPull,
 			s.commitsToPush)
 	}
+}
+
+func ReportStatus(baseDirectory string) (string, error) {
+	dirEntries, err := os.ReadDir(baseDirectory)
+	if err != nil {
+		return "", err
+	}
+
+	var buffer bytes.Buffer
+	var repoIndex int = 0
+
+	for _, entry := range dirEntries {
+		if entry.IsDir() {
+			gitStatus, err := queryGitStatus(baseDirectory, entry.Name())
+			if err == nil {
+				repoIndex++
+				buffer.WriteString(fmt.Sprintf("%02d: %v\n", repoIndex, gitStatus.String()))
+			}
+		}
+	}
+
+	return buffer.String(), nil
 }
 
 func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
@@ -72,7 +95,8 @@ func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
 
 func hasLocalChanges(gitStatusOutput string) bool {
 	return strings.Contains(gitStatusOutput, "Untracked files:") ||
-		strings.Contains(gitStatusOutput, "Changes not staged for commit:")
+		strings.Contains(gitStatusOutput, "Changes not staged for commit:") ||
+		strings.Contains(gitStatusOutput, "Changes to be committed:")
 }
 
 func extractBranchName(gitStatusOutput string) string {
@@ -86,17 +110,34 @@ func extractBranchName(gitStatusOutput string) string {
 }
 
 func extractChanges(gitStatusOutput string) (int, int) {
-	numberString, err := extractString(gitStatusOutput, `Your branch is behind .+ by (\d+) commit`)
+	// Your branch and 'origin/main' have diverged, ...
+	regex := regexp.MustCompile(`and have (\d+) and (\d+) different commits each`)
+	matches := regex.FindStringSubmatch(gitStatusOutput)
+	if len(matches) >= 3 {
+		return toIntOrDefault(matches[1], 0), toIntOrDefault(matches[2], 0)
+	}
 
-	if err == nil {
-		commitsToPull, err := strconv.Atoi(numberString)
-		if err != nil {
-			return 0, 0
-		} else {
-			return commitsToPull, 0
-		}
+	commitsToPull := extractNumberOrDefault(gitStatusOutput, `Your branch is behind .+ by (\d+) commit`, 0)
+	commitsToPush := extractNumberOrDefault(gitStatusOutput, `Your branch is ahead of .+ by (\d+) commit`, 0)
+
+	return commitsToPull, commitsToPush
+}
+
+func extractNumberOrDefault(input string, regexPattern string, defaultValue int) int {
+	numberString, err := extractString(input, regexPattern)
+	if err != nil {
+		return defaultValue
+	}
+
+	return toIntOrDefault(numberString, defaultValue)
+}
+
+func toIntOrDefault(input string, defaultValue int) int {
+	number, err := strconv.Atoi(input)
+	if err != nil {
+		return defaultValue
 	} else {
-		return 0, 0
+		return number
 	}
 }
 
@@ -109,26 +150,4 @@ func extractString(input string, regexPattern string) (string, error) {
 	} else {
 		return "", ErrNotFound
 	}
-}
-
-func ReportStatus(baseDirectory string) (string, error) {
-	dirEntries, err := os.ReadDir(baseDirectory)
-	if err != nil {
-		return "", err
-	}
-
-	var buffer bytes.Buffer
-	var repoIndex int = 0
-
-	for _, entry := range dirEntries {
-		if entry.IsDir() {
-			gitStatus, err := queryGitStatus(baseDirectory, entry.Name())
-			if err == nil {
-				repoIndex++
-				buffer.WriteString(fmt.Sprintf("%02d: %v\n", repoIndex, gitStatus.String()))
-			}
-		}
-	}
-
-	return buffer.String(), nil
 }
