@@ -56,17 +56,33 @@ func ReportStatus(baseDirectory string) (string, error) {
 	var buffer bytes.Buffer
 	var repoIndex int = 0
 
+	// statusChannel := make(chan []gitStatus)
+	// doneChannel := make(chan []struct{})
+	// wg := sync.WaitGroup{}
+
 	for _, entry := range dirEntries {
-		if entry.IsDir() {
-			gitStatus, err := queryGitStatus(baseDirectory, entry.Name())
-			if err == nil {
-				repoIndex++
-				buffer.WriteString(fmt.Sprintf("%02d: %v\n", repoIndex, gitStatus.String()))
-			}
+		fullPath := filepath.Join(baseDirectory, entry.Name())
+		if entry.IsDir() && isGitRepo(fullPath) {
+			repoIndex++
+			gitStatus, _ := queryGitStatus(baseDirectory, entry.Name())
+			buffer.WriteString(fmt.Sprintf("%02d: %v\n", repoIndex, gitStatus.String()))
 		}
 	}
 
 	return buffer.String(), nil
+}
+
+func isGitRepo(directoryPath string) bool {
+	gitDirPath := filepath.Join(directoryPath, ".git")
+	return isDirectory(gitDirPath)
+}
+
+func isDirectory(path string) bool {
+	if stat, err := os.Stat(path); err == nil && stat.IsDir() {
+		return true
+	}
+
+	return false
 }
 
 func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
