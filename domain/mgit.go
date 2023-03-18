@@ -58,7 +58,7 @@ func ReportStatus(baseDirectory string) (string, error) {
 	var buffer bytes.Buffer
 
 	statusChannel := make(chan gitStatus)
-	doneChannel := make(chan []struct{})
+	doneChannel := make(chan struct{})
 	wg := sync.WaitGroup{}
 
 	for _, item := range gitStatusItems {
