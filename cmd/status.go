@@ -16,7 +16,7 @@ var statusCmd = &cobra.Command{
 	Short: "Calls git status on each git repository found in subdirectories of the given path",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		error := mgit.ReportStatus(".", &util.LiveConsolePrinter{})
+		error := mgit.ReportStatus(".", util.NewLiveConsolePrinter())
 		return error
 	},
 }
