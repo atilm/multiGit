@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var (
@@ -56,13 +57,36 @@ func ReportStatus(baseDirectory string) (string, error) {
 
 	var buffer bytes.Buffer
 
-	// statusChannel := make(chan []gitStatus)
-	// doneChannel := make(chan []struct{})
-	// wg := sync.WaitGroup{}
+	statusChannel := make(chan gitStatus)
+	doneChannel := make(chan []struct{})
+	wg := sync.WaitGroup{}
+
+	for _, item := range gitStatusItems {
+		wg.Add(1)
+		go func(currentStatus gitStatus) {
+			defer wg.Done()
+			status, _ := queryGitStatus(baseDirectory, currentStatus)
+			statusChannel <- status
+		}(item)
+	}
+
+	go func() {
+		wg.Wait()
+		close(doneChannel)
+	}()
+
+	loop := true
+	for loop {
+		select {
+		case status := <-statusChannel:
+			gitStatusItems[status.index] = status
+		case <-doneChannel:
+			loop = false
+		}
+	}
 
 	for i, item := range gitStatusItems {
-		gitStatusItems[i], _ = queryGitStatus(baseDirectory, item)
-		buffer.WriteString(fmt.Sprintf("%02d: %v\n", item.index, gitStatusItems[i].String()))
+		buffer.WriteString(fmt.Sprintf("%02d: %v\n", item.index+1, gitStatusItems[i].String()))
 	}
 
 	return buffer.String(), nil
@@ -80,8 +104,8 @@ func initializeStatusSlice(baseDirectory string) ([]gitStatus, error) {
 	for _, entry := range dirEntries {
 		fullPath := filepath.Join(baseDirectory, entry.Name())
 		if entry.IsDir() && isGitRepo(fullPath) {
-			repoIndex++
 			statusEntries = append(statusEntries, gitStatus{index: uint(repoIndex), dirName: entry.Name()})
+			repoIndex++
 		}
 	}
 
