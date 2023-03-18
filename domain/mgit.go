@@ -80,10 +80,13 @@ func ReportStatus(baseDirectory string) (string, error) {
 		select {
 		case status := <-statusChannel:
 			gitStatusItems[status.index] = status
+			fmt.Printf(fmt.Sprintf("%02d: %v\n", status.index+1, status.String()))
 		case <-doneChannel:
 			loop = false
 		}
 	}
+
+	fmt.Println("")
 
 	for i, item := range gitStatusItems {
 		buffer.WriteString(fmt.Sprintf("%02d: %v\n", item.index+1, gitStatusItems[i].String()))

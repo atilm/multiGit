@@ -1,3 +1,7 @@
+[ ] Check if git is installed
+[ ] Handle local git repositories 
+[ ] Handle cloned bare repository
+
 [x] extract branch name
 [x] execute test-setup per test
 [x] remove TestMain
@@ -12,6 +16,3 @@
         Your branch and 'origin/main' have diverged, and have 1 and 1 different commits each, respectively.
 [x] show if there are local unpushed commits
     "Your branch is ahead of 'origin/main' by 1 commit."
-[ ] Check if git is installed
-[ ] Handle local git repositories 
-[ ] Handle cloned bare repository
