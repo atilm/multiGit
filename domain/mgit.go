@@ -18,6 +18,7 @@ var (
 )
 
 type gitStatus struct {
+	index         uint
 	dirName       string
 	branchName    string
 	localChanges  bool
@@ -48,28 +49,43 @@ func (s *gitStatus) String() string {
 }
 
 func ReportStatus(baseDirectory string) (string, error) {
-	dirEntries, err := os.ReadDir(baseDirectory)
+	gitStatusItems, err := initializeStatusSlice(baseDirectory)
 	if err != nil {
 		return "", err
 	}
 
 	var buffer bytes.Buffer
-	var repoIndex int = 0
 
 	// statusChannel := make(chan []gitStatus)
 	// doneChannel := make(chan []struct{})
 	// wg := sync.WaitGroup{}
 
+	for i, item := range gitStatusItems {
+		gitStatusItems[i], _ = queryGitStatus(baseDirectory, item)
+		buffer.WriteString(fmt.Sprintf("%02d: %v\n", item.index, gitStatusItems[i].String()))
+	}
+
+	return buffer.String(), nil
+}
+
+func initializeStatusSlice(baseDirectory string) ([]gitStatus, error) {
+	statusEntries := make([]gitStatus, 0, 10)
+
+	dirEntries, err := os.ReadDir(baseDirectory)
+	if err != nil {
+		return statusEntries, err
+	}
+
+	var repoIndex int = 0
 	for _, entry := range dirEntries {
 		fullPath := filepath.Join(baseDirectory, entry.Name())
 		if entry.IsDir() && isGitRepo(fullPath) {
 			repoIndex++
-			gitStatus, _ := queryGitStatus(baseDirectory, entry.Name())
-			buffer.WriteString(fmt.Sprintf("%02d: %v\n", repoIndex, gitStatus.String()))
+			statusEntries = append(statusEntries, gitStatus{index: uint(repoIndex), dirName: entry.Name()})
 		}
 	}
 
-	return buffer.String(), nil
+	return statusEntries, nil
 }
 
 func isGitRepo(directoryPath string) bool {
@@ -85,8 +101,8 @@ func isDirectory(path string) bool {
 	return false
 }
 
-func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
-	fullRepoPath := filepath.Join(baseDirectory, directory)
+func queryGitStatus(baseDirectory string, currentStatus gitStatus) (gitStatus, error) {
+	fullRepoPath := filepath.Join(baseDirectory, currentStatus.dirName)
 
 	fetchCommand := exec.Command("git", "fetch")
 	fetchCommand.Dir = fullRepoPath
@@ -100,12 +116,12 @@ func queryGitStatus(baseDirectory string, directory string) (gitStatus, error) {
 	// fmt.Print(outputString)
 
 	if strings.Contains(outputString, "fatal: not a git repository") {
-		return gitStatus{}, ErrNotARepository
+		return currentStatus, ErrNotARepository
 	} else {
 		branchName := extractBranchName(outputString)
 		commitsToPull, commitsToPush := extractChanges(outputString)
 		localChanges := hasLocalChanges(outputString)
-		return gitStatus{directory, branchName, localChanges, commitsToPull, commitsToPush}, nil
+		return gitStatus{currentStatus.index, currentStatus.dirName, branchName, localChanges, commitsToPull, commitsToPush}, nil
 	}
 }
 
