@@ -1,7 +1,7 @@
 package mgit
 
 import (
-	"bytes"
+	"atilm/mgit/utilities"
 	"errors"
 	"fmt"
 	"os"
@@ -35,12 +35,14 @@ func (s *gitStatus) String() string {
 	}
 
 	if s.commitsToPull == 0 && s.commitsToPush == 0 {
-		return fmt.Sprintf("%s (%s) %s[ok]",
+		return fmt.Sprintf("%02d: %s (%s) %s[ok]",
+			s.index+1,
 			s.dirName,
 			s.branchName,
 			localChangesIndicator)
 	} else {
-		return fmt.Sprintf("%s (%s) %s[%d to pull, %d to push]",
+		return fmt.Sprintf("%02d: %s (%s) %s[%d to pull, %d to push]",
+			s.index+1,
 			s.dirName,
 			s.branchName,
 			localChangesIndicator,
@@ -49,13 +51,11 @@ func (s *gitStatus) String() string {
 	}
 }
 
-func ReportStatus(baseDirectory string) (string, error) {
+func ReportStatus(baseDirectory string, printer utilities.ConsolePrinter) error {
 	gitStatusItems, err := initializeStatusSlice(baseDirectory)
 	if err != nil {
-		return "", err
+		return err
 	}
-
-	var buffer bytes.Buffer
 
 	statusChannel := make(chan gitStatus)
 	doneChannel := make(chan struct{})
@@ -80,19 +80,22 @@ func ReportStatus(baseDirectory string) (string, error) {
 		select {
 		case status := <-statusChannel:
 			gitStatusItems[status.index] = status
-			fmt.Printf(fmt.Sprintf("%02d: %v\n", status.index+1, status.String()))
+			lines := createStatusLines(gitStatusItems)
+			printer.PrintLines(lines)
 		case <-doneChannel:
 			loop = false
 		}
 	}
 
-	fmt.Println("")
+	return nil
+}
 
-	for i, item := range gitStatusItems {
-		buffer.WriteString(fmt.Sprintf("%02d: %v\n", item.index+1, gitStatusItems[i].String()))
+func createStatusLines(items []gitStatus) []string {
+	lines := make([]string, 0, len(items))
+	for _, status := range items {
+		lines = append(lines, status.String())
 	}
-
-	return buffer.String(), nil
+	return lines
 }
 
 func initializeStatusSlice(baseDirectory string) ([]gitStatus, error) {

@@ -7,8 +7,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+type MockPrinter struct {
+	lastPrintedLines []string
+}
+
+func (p *MockPrinter) PrintLines(lines []string) {
+	p.lastPrintedLines = lines
+}
 
 func logError(err error) {
 	if err != nil {
@@ -86,8 +95,10 @@ func addFileCommitAndPush(repositoryPath string, fileName string) {
 	runCommandInDir(exec.Command("git", "push"), repositoryPath)
 }
 
-func whenTheStatusCommandIsExecuted(baseDirectory string) (string, error) {
-	return mgit.ReportStatus(baseDirectory)
+func whenTheStatusCommandIsExecuted(baseDirectory string) (*MockPrinter, error) {
+	printer := MockPrinter{}
+	err := mgit.ReportStatus(baseDirectory, &printer)
+	return &printer, err
 }
 
 func whenAFileIsAddedTo(directory string, fileName string) {
@@ -119,7 +130,9 @@ func thenThereIsNoError(err error, t *testing.T) {
 	}
 }
 
-func thenTheOutputIs(expected string, actual string, t *testing.T) {
+func thenTheOutputIs(expected string, printer *MockPrinter, t *testing.T) {
+	actual := strings.Join(printer.lastPrintedLines[:], "\n")
+
 	if actual != expected {
 		t.Errorf("Actual: '%v' != Expected: '%v'", actual, expected)
 	}
@@ -136,8 +149,7 @@ func TestStatusListsCommitsToPull(t *testing.T) {
 	thenThereIsNoError(err, t)
 
 	expectedResult := `01: remote1 (main) [ok]
-02: remote2 (main) [1 to pull, 0 to push]
-`
+02: remote2 (main) [1 to pull, 0 to push]`
 	thenTheOutputIs(expectedResult, outString, t)
 }
 
@@ -153,8 +165,7 @@ func TestStatusListsCommitsToPush(t *testing.T) {
 	thenThereIsNoError(err, t)
 
 	expectedResult := `01: remote1 (main) [ok]
-02: remote2 (main) [0 to pull, 1 to push]
-`
+02: remote2 (main) [0 to pull, 1 to push]`
 	thenTheOutputIs(expectedResult, outString, t)
 }
 
@@ -168,8 +179,7 @@ func TestStatusReportsUntrackedFiles(t *testing.T) {
 	thenThereIsNoError(err, t)
 
 	expectedOutput := `01: remote1 (main) * [ok]
-02: remote2 (main) [ok]
-`
+02: remote2 (main) [ok]`
 	thenTheOutputIs(expectedOutput, outString, t)
 }
 
@@ -183,8 +193,7 @@ func TestStatusReportsUnstagedChanges(t *testing.T) {
 	thenThereIsNoError(err, t)
 
 	expectedOutput := `01: remote1 (main) [ok]
-02: remote2 (main) * [ok]
-`
+02: remote2 (main) * [ok]`
 	thenTheOutputIs(expectedOutput, outString, t)
 }
 
@@ -199,8 +208,7 @@ func TestStatusReportsUncommmittedStagedChanges(t *testing.T) {
 	thenThereIsNoError(err, t)
 
 	expectedOutput := `01: remote1 (main) [ok]
-02: remote2 (main) * [ok]
-`
+02: remote2 (main) * [ok]`
 	thenTheOutputIs(expectedOutput, outString, t)
 }
 
@@ -224,7 +232,6 @@ func TestStatusListsCommitsToPushAndPullWithLocalchanges(t *testing.T) {
 	thenThereIsNoError(err, t)
 
 	expectedResult := `01: remote1 (main) [ok]
-02: remote2 (main) * [1 to pull, 1 to push]
-`
+02: remote2 (main) * [1 to pull, 1 to push]`
 	thenTheOutputIs(expectedResult, outString, t)
 }

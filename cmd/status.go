@@ -5,7 +5,7 @@ package cmd
 
 import (
 	mgit "atilm/mgit/domain"
-	"fmt"
+	util "atilm/mgit/utilities"
 
 	"github.com/spf13/cobra"
 )
@@ -16,11 +16,7 @@ var statusCmd = &cobra.Command{
 	Short: "Calls git status on each git repository found in subdirectories of the given path",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		response, error := mgit.ReportStatus(".")
-		if error == nil {
-			fmt.Print(response)
-		}
-
+		error := mgit.ReportStatus(".", &util.LiveConsolePrinter{})
 		return error
 	},
 }
