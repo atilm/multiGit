@@ -34,21 +34,34 @@ func (s *gitStatus) String() string {
 		localChangesIndicator = "* "
 	}
 
-	if s.commitsToPull == 0 && s.commitsToPush == 0 {
-		return fmt.Sprintf("%02d: %s (%s) %s[ok]",
-			s.index+1,
-			s.dirName,
-			s.branchName,
-			localChangesIndicator)
-	} else {
-		return fmt.Sprintf("%02d: %s (%s) %s[%d to pull, %d to push]",
-			s.index+1,
-			s.dirName,
-			s.branchName,
-			localChangesIndicator,
-			s.commitsToPull,
-			s.commitsToPush)
+	entryId := fmt.Sprintf("%02d: %s",
+		s.index+1,
+		s.dirName)
+
+	if s.IsUninitialized() {
+		return fmt.Sprintf("%s ...", entryId)
 	}
+
+	entryBegin := fmt.Sprintf("%s (%s) %s",
+		entryId,
+		s.branchName,
+		localChangesIndicator)
+
+	if s.IsInSync() {
+		return entryBegin + "[ok]"
+	}
+
+	return entryBegin + fmt.Sprintf("[%d to pull, %d to push]",
+		s.commitsToPull,
+		s.commitsToPush)
+}
+
+func (s *gitStatus) IsUninitialized() bool {
+	return s.branchName == ""
+}
+
+func (s *gitStatus) IsInSync() bool {
+	return s.commitsToPull == 0 && s.commitsToPush == 0
 }
 
 func ReportStatus(baseDirectory string, printer utilities.ConsolePrinter) error {
