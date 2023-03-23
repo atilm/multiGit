@@ -88,19 +88,24 @@ func ReportStatus(baseDirectory string, printer utilities.ConsolePrinter) error 
 		close(doneChannel)
 	}()
 
+	printStatusItems(gitStatusItems, printer)
 	loop := true
 	for loop {
 		select {
 		case status := <-statusChannel:
 			gitStatusItems[status.index] = status
-			lines := createStatusLines(gitStatusItems)
-			printer.PrintLines(lines)
+			printStatusItems(gitStatusItems, printer)
 		case <-doneChannel:
 			loop = false
 		}
 	}
 
 	return nil
+}
+
+func printStatusItems(items []gitStatus, printer utilities.ConsolePrinter) {
+	lines := createStatusLines(items)
+	printer.PrintLines(lines)
 }
 
 func createStatusLines(items []gitStatus) []string {
