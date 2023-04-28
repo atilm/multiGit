@@ -16,7 +16,7 @@ var pullCmd = &cobra.Command{
 	Short: "performs git pull on all git subdirectories",
 	Long:  ``,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		error := mgit.PullAllSubdirectories(".", utilities.NewLiveConsolePrinter())
+		error := mgit.Pull(".", args, utilities.NewLiveConsolePrinter())
 		return error
 	},
 }

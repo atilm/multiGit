@@ -101,6 +101,16 @@ func whenTheStatusCommandIsExecuted(baseDirectory string) (*MockPrinter, error) 
 	return &printer, err
 }
 
+func whenThePullCommandIsExecutedWithoutArgs(baseDirectory string) (*MockPrinter, error) {
+	return whenThePullCommandIsExecuted(baseDirectory, make([]string, 0))
+}
+
+func whenThePullCommandIsExecuted(baseDirectory string, args []string) (*MockPrinter, error) {
+	printer := MockPrinter{}
+	err := mgit.Pull(baseDirectory, args, &printer)
+	return &printer, err
+}
+
 func whenAFileIsAddedTo(directory string, fileName string) {
 	filePath := filepath.Join(directory, fileName)
 	createFile(filePath)

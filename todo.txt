@@ -1,18 +1,16 @@
 [ ] Check if git is installed
-[ ] Handle local git repositories 
+[ ] Handle local git repositories
 [ ] Handle cloned bare repository
 
-[x] extract branch name
-[x] execute test-setup per test
-[x] remove TestMain
-[x] show if there are new commits on remote
-    "Your branch is behind 'origin/main' by 1 commit"
-[x] let struct gitStatus create its own string representation
-[x] show if there are local changes
-    [x] "Untracked files:"
-    [x] "Changes to be committed:"
-    [x] "Changes not staged for commit:"
-    [x] in combination with push / pull indicators
-        Your branch and 'origin/main' have diverged, and have 1 and 1 different commits each, respectively.
-[x] show if there are local unpushed commits
-    "Your branch is ahead of 'origin/main' by 1 commit."
+[ ] remove duplication to execute command in directory
+[ ] remove hard-coded output from pull
+[ ] when should pull return errors ?
+[ ] make pull parallel
+
+[ ] Pull 
+    [ ] error when an argument is not numeric
+    [ ] error when more arguments than repos 
+    [ ] error when value of an argument > number of repos
+    [ ] ignore duplicate arguments 
+    [ ] pull all repos specified by index in arguments 
+    [ ] pull all repos when no arguments are specified
