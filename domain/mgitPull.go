@@ -3,7 +3,6 @@ package mgit
 import (
 	"atilm/mgit/utilities"
 	"os/exec"
-	"path/filepath"
 )
 
 func Pull(baseDirectory string, args []string, printer utilities.ConsolePrinter) error {
@@ -24,10 +23,6 @@ func Pull(baseDirectory string, args []string, printer utilities.ConsolePrinter)
 	printStatusItems(gitStatusItems, printer)
 
 	return nil
-}
-
-func fullPath(baseDirectory string, statusItem gitStatus) string {
-	return filepath.Join(baseDirectory, statusItem.dirName)
 }
 
 func executeGitPull(baseDirectory string, statusItem gitStatus) error {

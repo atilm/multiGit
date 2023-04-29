@@ -17,14 +17,8 @@ func TestPullWithoutArgumentsPullsAllRepos(t *testing.T) {
 02: remote2 (main) [1 to pull, 0 to push]`
 	thenTheOutputIs(expectedResult, outString, t)
 
+	// mgit pull updates all repos
 	outString, err = whenThePullCommandIsExecutedWithoutArgs(testPath("client1"))
-	thenThereIsNoError(err, t)
-	expectedResult = `01: remote1 (main) [ok]
-02: remote2 (main) [ok]`
-	thenTheOutputIs(expectedResult, outString, t)
-
-	// then status shows that all repos have been pulled
-	outString, err = whenTheStatusCommandIsExecuted(testPath("client1"))
 	thenThereIsNoError(err, t)
 	expectedResult = `01: remote1 (main) [ok]
 02: remote2 (main) [ok]`

@@ -136,19 +136,6 @@ func initializeStatusSlice(baseDirectory string) ([]gitStatus, error) {
 	return statusEntries, nil
 }
 
-func isGitRepo(directoryPath string) bool {
-	gitDirPath := filepath.Join(directoryPath, ".git")
-	return isDirectory(gitDirPath)
-}
-
-func isDirectory(path string) bool {
-	if stat, err := os.Stat(path); err == nil && stat.IsDir() {
-		return true
-	}
-
-	return false
-}
-
 func queryGitStatus(baseDirectory string, currentStatus gitStatus) (gitStatus, error) {
 	fullRepoPath := filepath.Join(baseDirectory, currentStatus.dirName)
 
