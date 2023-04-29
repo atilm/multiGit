@@ -19,8 +19,8 @@ func TestPullWithoutArgumentsPullsAllRepos(t *testing.T) {
 
 	outString, err = whenThePullCommandIsExecutedWithoutArgs(testPath("client1"))
 	thenThereIsNoError(err, t)
-	expectedResult = `01: remote1 [done]
-02: remote2 [done]`
+	expectedResult = `01: remote1 (main) [ok]
+02: remote2 (main) [ok]`
 	thenTheOutputIs(expectedResult, outString, t)
 
 	// then status shows that all repos have been pulled

@@ -152,12 +152,22 @@ func isDirectory(path string) bool {
 func queryGitStatus(baseDirectory string, currentStatus gitStatus) (gitStatus, error) {
 	fullRepoPath := filepath.Join(baseDirectory, currentStatus.dirName)
 
-	fetchCommand := exec.Command("git", "fetch")
-	fetchCommand.Dir = fullRepoPath
-	fetchCommand.Run()
+	if err := executeFetchCommand(fullRepoPath); err != nil {
+		return currentStatus, err
+	}
 
+	return executeStatusCommand(fullRepoPath, currentStatus)
+}
+
+func executeFetchCommand(repoPath string) error {
+	fetchCommand := exec.Command("git", "fetch")
+	fetchCommand.Dir = repoPath
+	return fetchCommand.Run()
+}
+
+func executeStatusCommand(repoPath string, currentStatus gitStatus) (gitStatus, error) {
 	statusCommand := exec.Command("git", "status")
-	statusCommand.Dir = fullRepoPath
+	statusCommand.Dir = repoPath
 	output, _ := statusCommand.CombinedOutput()
 	outputString := string(output)
 

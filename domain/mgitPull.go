@@ -2,7 +2,6 @@ package mgit
 
 import (
 	"atilm/mgit/utilities"
-	"fmt"
 	"os/exec"
 	"path/filepath"
 )
@@ -13,31 +12,26 @@ func Pull(baseDirectory string, args []string, printer utilities.ConsolePrinter)
 		return err
 	}
 
-	for _, statusItem := range gitStatusItems {
-		err := executeGitPull(baseDirectory, statusItem)
-		if err != nil {
+	for i, statusItem := range gitStatusItems {
+		if err := executeGitPull(baseDirectory, statusItem); err != nil {
 			return err
 		}
+
+		newStatus, _ := executeStatusCommand(fullPath(baseDirectory, statusItem), statusItem)
+		gitStatusItems[i] = newStatus
 	}
 
-	lines := make([]string, 0, len(gitStatusItems))
-	for _, statusItem := range gitStatusItems {
-		lines = append(lines, fmt.Sprintf("%02d: %s [done]",
-			statusItem.index+1,
-			statusItem.dirName))
-	}
-
-	printer.PrintLines(lines)
+	printStatusItems(gitStatusItems, printer)
 
 	return nil
 }
 
+func fullPath(baseDirectory string, statusItem gitStatus) string {
+	return filepath.Join(baseDirectory, statusItem.dirName)
+}
+
 func executeGitPull(baseDirectory string, statusItem gitStatus) error {
-	fullRepoPath := filepath.Join(baseDirectory, statusItem.dirName)
-
 	pullCommand := exec.Command("git", "pull")
-	pullCommand.Dir = fullRepoPath
-	pullCommand.Run()
-
-	return nil
+	pullCommand.Dir = fullPath(baseDirectory, statusItem)
+	return pullCommand.Run()
 }

@@ -2,9 +2,8 @@
 [ ] Handle local git repositories
 [ ] Handle cloned bare repository
 
+[ ] extract utility code to all domain functions
 [ ] remove duplication to execute command in directory
-[ ] remove hard-coded output from pull
-[ ] when should pull return errors ?
 [ ] make pull parallel
 
 [ ] Pull 
@@ -13,4 +12,4 @@
     [ ] error when value of an argument > number of repos
     [ ] ignore duplicate arguments 
     [ ] pull all repos specified by index in arguments 
-    [ ] pull all repos when no arguments are specified
+    [x] pull all repos when no arguments are specified
