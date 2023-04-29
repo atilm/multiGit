@@ -6,7 +6,7 @@ import (
 )
 
 func Pull(baseDirectory string, args []string, printer utilities.ConsolePrinter) error {
-	gitStatusItems, err := initializeStatusSlice(baseDirectory)
+	gitStatusItems, err := CollectGitStatusFromSubdirectories(baseDirectory)
 	if err != nil {
 		return err
 	}

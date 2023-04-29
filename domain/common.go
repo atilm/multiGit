@@ -4,6 +4,8 @@ import (
 	"atilm/mgit/utilities"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"sync"
 )
 
@@ -17,6 +19,35 @@ func isDirectory(path string) bool {
 	}
 
 	return false
+}
+
+func extractNumberOrDefault(input string, regexPattern string, defaultValue int) int {
+	numberString, err := extractString(input, regexPattern)
+	if err != nil {
+		return defaultValue
+	}
+
+	return toIntOrDefault(numberString, defaultValue)
+}
+
+func toIntOrDefault(input string, defaultValue int) int {
+	number, err := strconv.Atoi(input)
+	if err != nil {
+		return defaultValue
+	} else {
+		return number
+	}
+}
+
+func extractString(input string, regexPattern string) (string, error) {
+	regex := regexp.MustCompile(regexPattern)
+	matches := regex.FindStringSubmatch(input)
+
+	if len(matches) >= 2 {
+		return matches[1], nil
+	} else {
+		return "", ErrNotFound
+	}
 }
 
 func isGitRepo(directoryPath string) bool {

@@ -3,12 +3,9 @@ package mgit
 import (
 	"atilm/mgit/utilities"
 	"errors"
-	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -17,54 +14,8 @@ var (
 	ErrNotFound       = errors.New("Not found")
 )
 
-type gitStatus struct {
-	index         uint
-	dirName       string
-	branchName    string
-	localChanges  bool
-	commitsToPull int
-	commitsToPush int
-}
-
-func (s *gitStatus) String() string {
-	var localChangesIndicator string = ""
-
-	if s.localChanges {
-		localChangesIndicator = "* "
-	}
-
-	entryId := fmt.Sprintf("%02d: %s",
-		s.index+1,
-		s.dirName)
-
-	if s.IsUninitialized() {
-		return fmt.Sprintf("%s ...", entryId)
-	}
-
-	entryBegin := fmt.Sprintf("%s (%s) %s",
-		entryId,
-		s.branchName,
-		localChangesIndicator)
-
-	if s.IsInSync() {
-		return entryBegin + "[ok]"
-	}
-
-	return entryBegin + fmt.Sprintf("[%d to pull, %d to push]",
-		s.commitsToPull,
-		s.commitsToPush)
-}
-
-func (s *gitStatus) IsUninitialized() bool {
-	return s.branchName == ""
-}
-
-func (s *gitStatus) IsInSync() bool {
-	return s.commitsToPull == 0 && s.commitsToPush == 0
-}
-
 func ReportStatus(baseDirectory string, printer utilities.ConsolePrinter) error {
-	gitStatusItems, err := initializeStatusSlice(baseDirectory)
+	gitStatusItems, err := CollectGitStatusFromSubdirectories(baseDirectory)
 	if err != nil {
 		return err
 	}
@@ -74,39 +25,6 @@ func ReportStatus(baseDirectory string, printer utilities.ConsolePrinter) error 
 	}
 
 	return parallelStatusUpdate(updateFunction, gitStatusItems, printer)
-}
-
-func printStatusItems(items []gitStatus, printer utilities.ConsolePrinter) {
-	lines := createStatusLines(items)
-	printer.PrintLines(lines)
-}
-
-func createStatusLines(items []gitStatus) []string {
-	lines := make([]string, 0, len(items))
-	for _, status := range items {
-		lines = append(lines, status.String())
-	}
-	return lines
-}
-
-func initializeStatusSlice(baseDirectory string) ([]gitStatus, error) {
-	statusEntries := make([]gitStatus, 0, 10)
-
-	dirEntries, err := os.ReadDir(baseDirectory)
-	if err != nil {
-		return statusEntries, err
-	}
-
-	var repoIndex int = 0
-	for _, entry := range dirEntries {
-		fullPath := filepath.Join(baseDirectory, entry.Name())
-		if entry.IsDir() && isGitRepo(fullPath) {
-			statusEntries = append(statusEntries, gitStatus{index: uint(repoIndex), dirName: entry.Name()})
-			repoIndex++
-		}
-	}
-
-	return statusEntries, nil
 }
 
 func queryGitStatus(baseDirectory string, currentStatus gitStatus) (gitStatus, error) {
@@ -171,33 +89,4 @@ func extractChanges(gitStatusOutput string) (int, int) {
 	commitsToPush := extractNumberOrDefault(gitStatusOutput, `Your branch is ahead of .+ by (\d+) commit`, 0)
 
 	return commitsToPull, commitsToPush
-}
-
-func extractNumberOrDefault(input string, regexPattern string, defaultValue int) int {
-	numberString, err := extractString(input, regexPattern)
-	if err != nil {
-		return defaultValue
-	}
-
-	return toIntOrDefault(numberString, defaultValue)
-}
-
-func toIntOrDefault(input string, defaultValue int) int {
-	number, err := strconv.Atoi(input)
-	if err != nil {
-		return defaultValue
-	} else {
-		return number
-	}
-}
-
-func extractString(input string, regexPattern string) (string, error) {
-	regex := regexp.MustCompile(regexPattern)
-	matches := regex.FindStringSubmatch(input)
-
-	if len(matches) >= 2 {
-		return matches[1], nil
-	} else {
-		return "", ErrNotFound
-	}
 }
