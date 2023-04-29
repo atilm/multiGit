@@ -2,15 +2,13 @@
 [ ] Handle local git repositories
 [ ] Handle cloned bare repository
 
-[.] extract utility code to all domain functions
-[ ] remove duplication to execute command in directory
-[x] make pull parallel
-[ ] extract status-struct-related code
-
-[ ] Pull 
-    [ ] error when an argument is not numeric
-    [ ] error when more arguments than repos 
-    [ ] error when value of an argument > number of repos
-    [ ] ignore duplicate arguments 
+[ ] Pull
     [ ] pull all repos specified by index in arguments 
+        [ ] error when an argument is not numeric
+        [ ] error when value of an argument > number of repos
+        [ ] ignore duplicate arguments 
     [x] pull all repos when no arguments are specified
+
+[ ] color-highlight output for better readability
+
+[ ] test on linux

@@ -101,11 +101,7 @@ func whenTheStatusCommandIsExecuted(baseDirectory string) (*MockPrinter, error) 
 	return &printer, err
 }
 
-func whenThePullCommandIsExecutedWithoutArgs(baseDirectory string) (*MockPrinter, error) {
-	return whenThePullCommandIsExecuted(baseDirectory, make([]string, 0))
-}
-
-func whenThePullCommandIsExecuted(baseDirectory string, args []string) (*MockPrinter, error) {
+func whenThePullCommandIsExecuted(baseDirectory string, args ...string) (*MockPrinter, error) {
 	printer := MockPrinter{}
 	err := mgit.Pull(baseDirectory, args, &printer)
 	return &printer, err
@@ -140,9 +136,17 @@ func thenThereIsNoError(err error, t *testing.T) {
 	}
 }
 
+func thenThereIsAnError(actual error, expected error, t *testing.T) {
+	assertEqual(actual, expected, t)
+}
+
 func thenTheOutputIs(expected string, printer *MockPrinter, t *testing.T) {
 	actual := strings.Join(printer.lastPrintedLines[:], "\n")
 
+	assertEqual(actual, expected, t)
+}
+
+func assertEqual(expected interface{}, actual interface{}, t *testing.T) {
 	if actual != expected {
 		t.Errorf("Actual: '%v' != Expected: '%v'", actual, expected)
 	}

@@ -1,6 +1,9 @@
 package mgit_test
 
-import "testing"
+import (
+	mgit "atilm/mgit/domain"
+	"testing"
+)
 
 func TestPullWithoutArgumentsPullsAllRepos(t *testing.T) {
 	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
@@ -18,9 +21,34 @@ func TestPullWithoutArgumentsPullsAllRepos(t *testing.T) {
 	thenTheOutputIs(expectedResult, outString, t)
 
 	// mgit pull updates all repos
-	outString, err = whenThePullCommandIsExecutedWithoutArgs(testPath("client1"))
+	outString, err = whenThePullCommandIsExecuted(testPath("client1"))
 	thenThereIsNoError(err, t)
 	expectedResult = `01: remote1 (main) [ok]
 02: remote2 (main) [ok]`
 	thenTheOutputIs(expectedResult, outString, t)
+}
+
+func TestPullWithInvalidArgumentsReturnsAnError(t *testing.T) {
+	teardown := givenAnEnvironmentWithTwoClientsAndTwoRemotes(t)
+	defer teardown(t)
+
+	testCases := map[string]struct {
+		arguments      []string
+		expectedError  error
+		expectedOutput string
+	}{
+		"non-numeric":          {arguments: []string{"n"}, expectedError: mgit.ErrNonNumericArg, expectedOutput: "Non-numeric argument n found."},
+		"out of uppper bounds": {arguments: []string{"3"}, expectedError: mgit.ErrRepoIndex, expectedOutput: "Repo index 3 is not in range [1:2]."},
+		"out of lower bounds":  {arguments: []string{"0"}, expectedError: mgit.ErrRepoIndex, expectedOutput: "Repo index 0 is not in range [1:2]."},
+		"second arg invalid":   {arguments: []string{"1", "3"}, expectedError: mgit.ErrRepoIndex, expectedOutput: "Repo index 3 is not in range [1:2]."},
+		"too many arguments":   {arguments: []string{"1", "2", "3"}, expectedError: mgit.ErrArgCount, expectedOutput: "More arguments given than repos present."},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			outString, err := whenThePullCommandIsExecuted(testPath("client1"), testCase.arguments...)
+			thenThereIsAnError(err, testCase.expectedError, t)
+			thenTheOutputIs(testCase.expectedOutput, outString, t)
+		})
+	}
 }
