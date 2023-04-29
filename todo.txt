@@ -3,9 +3,9 @@
 [ ] Handle cloned bare repository
 
 [ ] Pull
-    [ ] pull all repos specified by index in arguments 
-        [ ] error when an argument is not numeric
-        [ ] error when value of an argument > number of repos
+    [x] pull all repos specified by index in arguments 
+        [x] error when an argument is not numeric
+        [x] error when value of an argument > number of repos
         [ ] ignore duplicate arguments 
     [x] pull all repos when no arguments are specified
 

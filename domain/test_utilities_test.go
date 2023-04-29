@@ -143,7 +143,7 @@ func thenThereIsAnError(actual error, expected error, t *testing.T) {
 func thenTheOutputIs(expected string, printer *MockPrinter, t *testing.T) {
 	actual := strings.Join(printer.lastPrintedLines[:], "\n")
 
-	assertEqual(actual, expected, t)
+	assertEqual(expected, actual, t)
 }
 
 func assertEqual(expected interface{}, actual interface{}, t *testing.T) {

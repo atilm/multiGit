@@ -83,7 +83,7 @@ func parallelStatusUpdate(
 	for loop {
 		select {
 		case status := <-statusChannel:
-			gitStatusItems[status.index] = status
+			gitStatusItems = replace(gitStatusItems, status)
 			printStatusItems(gitStatusItems, printer)
 		case <-doneChannel:
 			loop = false
@@ -91,4 +91,15 @@ func parallelStatusUpdate(
 	}
 
 	return nil
+}
+
+func replace(gitStatusItems []gitStatus, status gitStatus) []gitStatus {
+	for i, oldStatus := range gitStatusItems {
+		if oldStatus.index == status.index {
+			gitStatusItems[i] = status
+			break
+		}
+	}
+
+	return gitStatusItems
 }

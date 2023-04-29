@@ -24,6 +24,8 @@ func Pull(baseDirectory string, args []string, printer utilities.ConsolePrinter)
 		return err
 	}
 
+	gitStatusItems = filterStatusItems(gitStatusItems, args)
+
 	pullAndReport := func(status gitStatus) (gitStatus, error) {
 		if err := executeGitPull(baseDirectory, status); err != nil {
 			return status, err
@@ -53,13 +55,47 @@ func validateArgs(args []string, statusItemCount int, printer utilities.ConsoleP
 			return ErrNonNumericArg
 		}
 
-		if number < 1 || number > len(args) {
+		if number < 1 || number > statusItemCount {
 			printer.PrintLines([]string{fmt.Sprintf("Repo index %s is not in range [1:%d].", arg, statusItemCount)})
 			return ErrRepoIndex
 		}
 	}
 
 	return nil
+}
+
+func filterStatusItems(items []gitStatus, args []string) []gitStatus {
+	if len(args) == 0 {
+		return items
+	}
+
+	argsSet := toSet(args)
+
+	filteredList := make([]gitStatus, 0, len(items))
+	for _, item := range items {
+		if contains(argsSet, int(item.index+1)) {
+			filteredList = append(filteredList, item)
+		}
+	}
+
+	return filteredList
+}
+
+func toSet(args []string) map[int]struct{} {
+	type void struct{}
+	var member void
+
+	set := make(map[int]struct{})
+	for _, arg := range args {
+		number, _ := strconv.Atoi(arg)
+		set[number] = member
+	}
+	return set
+}
+
+func contains(set map[int]struct{}, element int) bool {
+	_, exists := set[element]
+	return exists
 }
 
 func executeGitPull(baseDirectory string, statusItem gitStatus) error {
