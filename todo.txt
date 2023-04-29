@@ -2,9 +2,10 @@
 [ ] Handle local git repositories
 [ ] Handle cloned bare repository
 
-[ ] extract utility code to all domain functions
+[.] extract utility code to all domain functions
 [ ] remove duplication to execute command in directory
-[ ] make pull parallel
+[x] make pull parallel
+[ ] extract status-struct-related code
 
 [ ] Pull 
     [ ] error when an argument is not numeric

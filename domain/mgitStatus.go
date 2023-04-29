@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 var (
@@ -70,37 +69,11 @@ func ReportStatus(baseDirectory string, printer utilities.ConsolePrinter) error 
 		return err
 	}
 
-	statusChannel := make(chan gitStatus)
-	doneChannel := make(chan struct{})
-	wg := sync.WaitGroup{}
-
-	for _, item := range gitStatusItems {
-		wg.Add(1)
-		go func(currentStatus gitStatus) {
-			defer wg.Done()
-			status, _ := queryGitStatus(baseDirectory, currentStatus)
-			statusChannel <- status
-		}(item)
+	updateFunction := func(status gitStatus) (gitStatus, error) {
+		return queryGitStatus(baseDirectory, status)
 	}
 
-	go func() {
-		wg.Wait()
-		close(doneChannel)
-	}()
-
-	printStatusItems(gitStatusItems, printer)
-	loop := true
-	for loop {
-		select {
-		case status := <-statusChannel:
-			gitStatusItems[status.index] = status
-			printStatusItems(gitStatusItems, printer)
-		case <-doneChannel:
-			loop = false
-		}
-	}
-
-	return nil
+	return parallelStatusUpdate(updateFunction, gitStatusItems, printer)
 }
 
 func printStatusItems(items []gitStatus, printer utilities.ConsolePrinter) {

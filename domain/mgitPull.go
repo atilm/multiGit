@@ -11,18 +11,15 @@ func Pull(baseDirectory string, args []string, printer utilities.ConsolePrinter)
 		return err
 	}
 
-	for i, statusItem := range gitStatusItems {
-		if err := executeGitPull(baseDirectory, statusItem); err != nil {
-			return err
+	pullAndReport := func(status gitStatus) (gitStatus, error) {
+		if err := executeGitPull(baseDirectory, status); err != nil {
+			return status, err
 		}
 
-		newStatus, _ := executeStatusCommand(fullPath(baseDirectory, statusItem), statusItem)
-		gitStatusItems[i] = newStatus
+		return executeStatusCommand(fullPath(baseDirectory, status), status)
 	}
 
-	printStatusItems(gitStatusItems, printer)
-
-	return nil
+	return parallelStatusUpdate(pullAndReport, gitStatusItems, printer)
 }
 
 func executeGitPull(baseDirectory string, statusItem gitStatus) error {
