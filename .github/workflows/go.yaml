@@ -28,4 +28,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: mgit
-        path: mgit.exe
+        path: ./mgit.exe
