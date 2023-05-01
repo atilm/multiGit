@@ -14,9 +14,14 @@ import (
 var pullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "performs git pull on all git subdirectories",
-	Long:  ``,
+	Long: `
+When called without arguments all repositories are pulled.
+When called with a list of repo-indices only the specified repos will be pulled. E.g.
+mgit pull 3 5 6
+pulls the repositories with the indices 3, 5 and 6 as indicated by mgit status.
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		error := mgit.Pull(".", args, utilities.NewLiveConsolePrinter())
+		error := mgit.Pull(MgitBaseDirectory, args, utilities.NewLiveConsolePrinter())
 		return error
 	},
 }

@@ -2,14 +2,7 @@
 [ ] Handle local git repositories
 [ ] Handle cloned bare repository
 
-[ ] flag -d to execute commands in other directory e.g. mgit pull -d ..
-
-[ ] Pull
-    [x] pull all repos specified by index in arguments 
-        [x] error when an argument is not numeric
-        [x] error when value of an argument > number of repos
-        [ ] ignore duplicate arguments 
-    [x] pull all repos when no arguments are specified
+[ ] meaingfull output when pull not possible
 
 [ ] color-highlight output for better readability
 

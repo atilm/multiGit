@@ -14,9 +14,10 @@ import (
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Calls git status on each git repository found in subdirectories of the given path",
-	Long:  ``,
+	Long: `output format:
+<repo-index>: <repo name> (<branch name>) (* indicates uncommitted changes) [ok or count of commits to push / pull]`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		error := mgit.ReportStatus(".", util.NewLiveConsolePrinter())
+		error := mgit.ReportStatus(MgitBaseDirectory, util.NewLiveConsolePrinter())
 		return error
 	},
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var MgitBaseDirectory string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "mgit",
@@ -31,6 +33,7 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&MgitBaseDirectory, "dir", "d", ".", "Specify the directory which contains the repositories. e.g. -d ..")
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
