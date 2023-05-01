@@ -65,12 +65,16 @@ func givenAnEnvironmentWithTwoClientsAndTwoRemotes(t *testing.T) func(t *testing
 	logError(os.MkdirAll(testPath("remote1"), os.ModeTemporary))
 	logError(os.MkdirAll(testPath("remote2"), os.ModeTemporary))
 	runCommand(exec.Command("git", "--bare", "init", "-b", "main", testPath("remote1")))
+	setLocalGitUserAndEmail(testPath("remote1"))
 	runCommand(exec.Command("git", "--bare", "init", "-b", "main", testPath("remote2")))
+	setLocalGitUserAndEmail(testPath("remote2"))
 
 	// create a writing client
 	logError(os.MkdirAll(testPath("client2"), os.ModeTemporary))
 	runCommand(exec.Command("git", "clone", testPath("remote1"), testPath("client2/remote1")))
+	setLocalGitUserAndEmail(testPath("client2/remote1"))
 	runCommand(exec.Command("git", "clone", testPath("remote2"), testPath("client2/remote2")))
+	setLocalGitUserAndEmail(testPath("client2/remote2"))
 
 	// initial commits
 	addFileCommitAndPush(testPath("client2/remote1"), "file1.txt")
@@ -79,12 +83,19 @@ func givenAnEnvironmentWithTwoClientsAndTwoRemotes(t *testing.T) func(t *testing
 	// create a reading client
 	logError(os.MkdirAll(testPath("client1"), os.ModeTemporary))
 	runCommand(exec.Command("git", "clone", testPath("remote1"), testPath("client1/remote1")))
+	setLocalGitUserAndEmail(testPath("client1/remote1"))
 	runCommand(exec.Command("git", "clone", testPath("remote2"), testPath("client1/remote2")))
+	setLocalGitUserAndEmail(testPath("client1/remote2"))
 	logError(os.MkdirAll(testPath("client1/nonGitDirectory"), os.ModeTemporary))
 
 	return func(t *testing.T) {
 		os.RemoveAll(testdataDirectory)
 	}
+}
+
+func setLocalGitUserAndEmail(repoPath string) {
+	runCommandInDir(exec.Command("git", "config", "user.email", "my@email.com"), repoPath)
+	runCommandInDir(exec.Command("git", "config", "user.name", "My name"), repoPath)
 }
 
 func addFileCommitAndPush(repositoryPath string, fileName string) {
