@@ -64,8 +64,8 @@ func givenAnEnvironmentWithTwoClientsAndTwoRemotes(t *testing.T) func(t *testing
 	// init bare "remote" repositories
 	logError(os.MkdirAll(testPath("remote1"), os.ModeTemporary))
 	logError(os.MkdirAll(testPath("remote2"), os.ModeTemporary))
-	runCommand(exec.Command("git", "--bare", "init", testPath("remote1")))
-	runCommand(exec.Command("git", "--bare", "init", testPath("remote2")))
+	runCommand(exec.Command("git", "--bare", "init", "-b", "main", testPath("remote1")))
+	runCommand(exec.Command("git", "--bare", "init", "-b", "main", testPath("remote2")))
 
 	// create a writing client
 	logError(os.MkdirAll(testPath("client2"), os.ModeTemporary))
