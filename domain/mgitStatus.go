@@ -49,8 +49,6 @@ func executeStatusCommand(repoPath string, currentStatus gitStatus) (gitStatus, 
 	output, _ := statusCommand.CombinedOutput()
 	outputString := string(output)
 
-	// fmt.Print(outputString)
-
 	if strings.Contains(outputString, "fatal: not a git repository") {
 		return currentStatus, ErrNotARepository
 	} else {
