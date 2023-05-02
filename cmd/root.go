@@ -11,13 +11,18 @@ var MgitBaseDirectory string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "mgit",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Apply git commands to multiple repositories at once",
+	Long: `mgit lets you execute git status and git pull for all git repositories within a directory (non-recursively).
+	
+To display the status of all repositories in the parent directory of the current directory:
+mgit status -d ..
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+To pull all repositories in the current directory:
+mgit pull
+
+To pull only repositories within indices 2 and 3 in the parent directory:
+mgit pull 2 3 -d ..
+`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
